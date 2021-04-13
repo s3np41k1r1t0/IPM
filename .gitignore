@@ -4,3 +4,4 @@ bin
 .project
 server
 minify.sh
+src/static/favicon.ico
