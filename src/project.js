@@ -4,7 +4,7 @@
 // Bake-off: durante os laboratórios da semana de 3 de Maio
 
 // Database (CHANGE THESE!)
-const GROUP_NUMBER   = 0;      // Add your group number here as an integer (e.g., 2, 3)
+const GROUP_NUMBER   = 26;      // Add your group number here as an integer (e.g., 2, 3)
 const BAKE_OFF_DAY   = false;  // Set to 'true' before sharing during the simulation and bake-off days
 
 // Target and grid properties (DO NOT CHANGE!)
@@ -25,6 +25,24 @@ let trials 			 = [];     // contains the order of targets that activate in the t
 let current_trial    = 0;      // the current trial number (indexes into trials array above)
 let attempt          = 0;      // users complete each test twice to account for practice (attemps 0 and 1)
 let fitts_IDs        = [];     // add the Fitts ID for each selection here (-1 when there is a miss)
+
+// Sound handler class for when a hit is registered
+class soundBox {
+  constructor(){
+    this.synth = new p5.MonoSynth();
+    this.note = "C4";
+    this.velocity = 0.5;
+    this.startTime = 0;
+    this.duration = 0.33;
+  }
+
+  play(){
+    userStartAudio();
+    this.synth.play(this.note,this.velocity,this.startTime,this.duration);
+  }
+}
+
+let soundHandler;
 
 // Target class (position and width)
 class Target
@@ -47,6 +65,9 @@ function setup()
   
   textFont("Arial", 18);     // font size for the majority of the text
   drawUserIDScreen();        // draws the user input screen (student number and display size)
+  
+  soundHandler = new soundBox(); // sound handler
+  masterVolume(0.1);         // thank you for not blowing up our ears
 }
 
 // Runs every frame and redraws the screen
@@ -138,7 +159,10 @@ function mousePressed()
     
     // Check to see if the mouse cursor is inside the target bounds,
     // increasing either the 'hits' or 'misses' counters
-    if (dist(target.x, target.y, mouseX, mouseY) < target.w/2)  hits++;                                                       
+    if (dist(target.x, target.y, mouseX, mouseY) < target.w/2) {
+      hits++;
+      soundHandler.play();
+    }                                                         
     else misses++;
     
     current_trial++;                 // Move on to the next trial/target
@@ -173,7 +197,7 @@ function drawTarget(i)
   { 
     // Highlights the target the user should be trying to select
     // with a white border
-    stroke(color(220,220,220));
+    stroke(color(220,0,0));
     strokeWeight(2);
     
     // Remember you are allowed to access targets (i-1) and (i+1)

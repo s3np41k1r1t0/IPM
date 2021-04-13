@@ -2,4 +2,5 @@ bin
 .vscode
 .idea
 .project
-
+server
+minify.sh
