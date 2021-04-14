@@ -199,17 +199,19 @@ function drawTarget(i)
     // with a white border
     stroke(color(220,0,0));
     strokeWeight(2);
-    
+    fill(color(240,0,0)); 
     // Remember you are allowed to access targets (i-1) and (i+1)
     // if this is the target the user should be trying to select
     //
   }
   // Does not draw a border if this is not the target the user
   // should be trying to select
-  else noStroke();          
-
+  else {
+    noStroke();          
+    fill(color(155,155,155));                 
+  }
   // Draws the target
-  fill(color(155,155,155));                 
+  // fill(color(155,155,155));                 
   circle(target.x, target.y, target.w);
 }
 
