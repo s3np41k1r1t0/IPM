@@ -47,7 +47,7 @@ function validID()
   else 
   {
     alert("Please insert a valid student number (integer between 1000 and 200000)");
-	return false;
+    return false;
   }
 }
 

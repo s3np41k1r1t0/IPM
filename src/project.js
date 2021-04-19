@@ -6,6 +6,7 @@
 // Database (CHANGE THESE!)
 const GROUP_NUMBER   = 26;      // Add your group number here as an integer (e.g., 2, 3)
 const BAKE_OFF_DAY   = false;  // Set to 'true' before sharing during the simulation and bake-off days
+const DEBUG = true; // Remove me on bake-off day
 
 // Target and grid properties (DO NOT CHANGE!)
 let PPI, PPCM;
@@ -30,19 +31,39 @@ let fitts_IDs        = [];     // add the Fitts ID for each selection here (-1 w
 class soundBox {
   constructor(){
     this.synth = new p5.MonoSynth();
-    this.note = "C4";
+    this.noteHit = "C5";
+    this.noteMiss = "B3";
     this.velocity = 0.5;
     this.startTime = 0;
     this.duration = 0.33;
   }
 
-  play(){
+  // Plays high pitch sound on target hit
+  playHit(){
     userStartAudio();
-    this.synth.play(this.note,this.velocity,this.startTime,this.duration);
+    this.synth.play(this.noteHit,this.velocity,this.startTime,this.duration);
+  }
+  
+  // Plays low pitch sound on target miss
+  playMiss(){
+    userStartAudio();
+    this.synth.play(this.noteMiss,this.velocity,this.startTime,this.duration);
   }
 }
 
 let soundHandler;
+
+// logarithm function for base2
+const log2 = (n) => {
+  return Math.log(n) / Math.log(2);
+};
+  
+// calculates fitts id given 2 target indexes
+function calculateFittsID(current,last){
+  current = getTargetBounds(current);
+  last = getTargetBounds(last);
+  return log2(dist(current.x,current.y,last.x,last.y)/current.w + 1);
+}
 
 // Target class (position and width)
 class Target
@@ -60,6 +81,7 @@ function setup()
 {
   createCanvas(700, 500);    // window size in px before we go into fullScreen()
   frameRate(60);             // frame rate (DO NOT CHANGE!)
+  resizeCanvas(windowWidth, windowHeight); // prettify
   
   randomizeTrials();         // randomize the trial order at the start of execution
   
@@ -113,8 +135,17 @@ function printAndSavePerformance()
   text("Average time for each target (+ penalty): " + target_w_penalty + "s", width/2, 220);
   
   // Print Fitts IDS (one per target, -1 if failed selection)
-  // 
-
+  text("Fitts Index of Performance", width/2, 260);
+  
+  // Pretty prints the Fitts IDs taking into consideration their relative position 
+  let idx = 260+40;
+  const mult = 2 * (height - idx) / fitts_IDs.length;
+  fitts_IDs.forEach((id,i) => {
+    text("Target " + (i+1) + ": " + (id !== -1 ? id : "MISSED"), 
+          width/4 * (1 + 2 * Math.floor((idx + i*mult) / height)),
+          idx + (i*mult % (height - idx)));
+  });
+  
   // Saves results (DO NOT CHANGE!)
   let attempt_data = 
   {
@@ -130,6 +161,9 @@ function printAndSavePerformance()
         target_w_penalty:   target_w_penalty,
         fitts_IDs:          fitts_IDs
   }
+ 
+  if(DEBUG)
+    console.log(attempt_data);
   
   // Send data to DB (DO NOT CHANGE!)
   if (BAKE_OFF_DAY)
@@ -161,9 +195,15 @@ function mousePressed()
     // increasing either the 'hits' or 'misses' counters
     if (dist(target.x, target.y, mouseX, mouseY) < target.w/2) {
       hits++;
-      soundHandler.play();
+      soundHandler.playHit();
+      // if its the first trial pushes what must be printed afterward
+      fitts_IDs.push(current_trial > 0 ? calculateFittsID(trials[current_trial],trials[current_trial-1]) : "---");
     }                                                         
-    else misses++;
+    else {
+      misses++;
+      soundHandler.playMiss();
+      fitts_IDs.push(-1);
+    }
     
     current_trial++;                 // Move on to the next trial/target
     
@@ -247,23 +287,24 @@ function continueTest()
 // Is invoked when the canvas is resized (e.g., when we go fullscreen)
 function windowResized() 
 {
-  resizeCanvas(windowWidth, windowHeight);
-    
-  let display    = new Display({ diagonal: display_size }, window.screen);
-
-  // DO NOT CHANGE THESE!
-  PPI            = display.ppi;                        // calculates pixels per inch
-  PPCM           = PPI / 2.54;                         // calculates pixels per cm
-  TARGET_SIZE    = 1.5 * PPCM;                         // sets the target size in cm, i.e, 1.5cm
-  TARGET_PADDING = 1.5 * PPCM;                         // sets the padding around the targets in cm
-  MARGIN         = 1.5 * PPCM;                         // sets the margin around the targets in cm
-
-  // Sets the margin of the grid of targets to the left of the canvas (DO NOT CHANGE!)
-  LEFT_PADDING   = width/2 - TARGET_SIZE - 1.5 * TARGET_PADDING - 1.5 * MARGIN;        
-  
-  // Sets the margin of the grid of targets to the top of the canvas (DO NOT CHANGE!)
-  TOP_PADDING    = height/2 - TARGET_SIZE - 1.5 * TARGET_PADDING - 1.5 * MARGIN;
-  
+  // Fix for resize screen bug while not playing, please do not janky solutions :')
   // Starts drawing targets immediately after we go fullscreen
-  draw_targets = true;
+  if((draw_targets = document.getElementsByTagName("button").length === 0 && attempt < 2)){
+    resizeCanvas(windowWidth, windowHeight);
+
+    let display    = new Display({ diagonal: display_size }, window.screen);
+
+    // DO NOT CHANGE THESE!
+    PPI            = display.ppi;                        // calculates pixels per inch
+    PPCM           = PPI / 2.54;                         // calculates pixels per cm
+    TARGET_SIZE    = 1.5 * PPCM;                         // sets the target size in cm, i.e, 1.5cm
+    TARGET_PADDING = 1.5 * PPCM;                         // sets the padding around the targets in cm
+    MARGIN         = 1.5 * PPCM;                         // sets the margin around the targets in cm
+
+    // Sets the margin of the grid of targets to the left of the canvas (DO NOT CHANGE!)
+    LEFT_PADDING   = width/2 - TARGET_SIZE - 1.5 * TARGET_PADDING - 1.5 * MARGIN;        
+    
+    // Sets the margin of the grid of targets to the top of the canvas (DO NOT CHANGE!)
+    TOP_PADDING    = height/2 - TARGET_SIZE - 1.5 * TARGET_PADDING - 1.5 * MARGIN;
+  }
 }
