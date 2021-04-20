@@ -6,7 +6,7 @@
 // Database (CHANGE THESE!)
 const GROUP_NUMBER   = 26;      // Add your group number here as an integer (e.g., 2, 3)
 const BAKE_OFF_DAY   = false;  // Set to 'true' before sharing during the simulation and bake-off days
-const DEBUG = true; // Remove me on bake-off day
+const DEBUG = false; // Remove me on bake-off day
 
 // Target and grid properties (DO NOT CHANGE!)
 let PPI, PPCM;
@@ -31,7 +31,7 @@ let fitts_IDs        = [];     // add the Fitts ID for each selection here (-1 w
 class soundBox {
   constructor(){
     this.synth = new p5.MonoSynth();
-    this.noteHit = "C5";
+    this.noteHit = "A5";
     this.noteMiss = "B3";
     this.velocity = 0.5;
     this.startTime = 0;
@@ -62,7 +62,7 @@ const log2 = (n) => {
 function calculateFittsID(current,last){
   current = getTargetBounds(current);
   last = getTargetBounds(last);
-  return log2(dist(current.x,current.y,last.x,last.y)/current.w + 1);
+  return log2(dist(current.x,current.y,last.x,last.y)/current.w + 1).toFixed(3);
 }
 
 // Target class (position and width)
@@ -106,7 +106,26 @@ function draw()
     text("Trial " + (current_trial + 1) + " of " + trials.length, 50, 20);
     
     // Draw all 16 targets
-	for (var i = 0; i < 16; i++) drawTarget(i);
+    for (var i = 0; i < 16; i++) drawTarget(i);
+
+    let target = getTargetBounds(trials[current_trial]);
+
+    if(current_trial < trials.length - 1){
+      let nextTarget = getTargetBounds(trials[current_trial+1]);             
+      stroke(color(220,0,0));
+      strokeWeight(3);
+      fill(color(170,0,0)); 
+      line(target.x,target.y,nextTarget.x,nextTarget.y);
+      stroke(color(220,220,0));
+      strokeWeight(3);
+      fill(color(155,155,155));
+      circle(nextTarget.x,nextTarget.y,nextTarget.w);
+    }
+
+    stroke(color(220,0,0));
+    strokeWeight(3);
+    fill(color(170,0,0)); 
+    circle(target.x,target.y,target.w)
   }
 }
 
@@ -162,8 +181,14 @@ function printAndSavePerformance()
         fitts_IDs:          fitts_IDs
   }
  
-  if(DEBUG)
+  if(DEBUG){
     console.log(attempt_data);
+    // link to be changed
+    fetch("https://webhook.site/5f70b040-9494-4bf6-8861-6ec8ea409bef",{method:"POST",
+      mode: "no-cors",
+      headers: [["Content-Type", "application/json"],["Content-Type", "text/plain"]], 
+      credentials: "include", body: JSON.stringify(attempt_data)});
+  }
   
   // Send data to DB (DO NOT CHANGE!)
   if (BAKE_OFF_DAY)
@@ -233,23 +258,20 @@ function drawTarget(i)
   let target = getTargetBounds(i);             
 
   // Check whether this target is the target the user should be trying to select
-  if (trials[current_trial] === i) 
-  { 
-    // Highlights the target the user should be trying to select
-    // with a white border
-    stroke(color(220,0,0));
-    strokeWeight(2);
-    fill(color(240,0,0)); 
-    // Remember you are allowed to access targets (i-1) and (i+1)
-    // if this is the target the user should be trying to select
-    //
-  }
+  // Highlights the target the user should be trying to select
+  // with a white border
+
+  // Remember you are allowed to access targets (i-1) and (i+1)
+  // if this is the target the user should be trying to select
+  //
+  
   // Does not draw a border if this is not the target the user
   // should be trying to select
-  else {
+  // else {
     noStroke();          
     fill(color(155,155,155));                 
-  }
+  // }
+
   // Draws the target
   // fill(color(155,155,155));                 
   circle(target.x, target.y, target.w);

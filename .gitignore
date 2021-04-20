@@ -5,3 +5,4 @@ bin
 server
 minify.sh
 src/static/favicon.ico
+player
