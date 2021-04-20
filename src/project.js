@@ -6,7 +6,7 @@
 // Database (CHANGE THESE!)
 const GROUP_NUMBER   = 26;      // Add your group number here as an integer (e.g., 2, 3)
 const BAKE_OFF_DAY   = false;  // Set to 'true' before sharing during the simulation and bake-off days
-const DEBUG = false; // Remove me on bake-off day
+const DEBUG = true; // Remove me on bake-off day
 
 // Target and grid properties (DO NOT CHANGE!)
 let PPI, PPCM;
@@ -65,6 +65,9 @@ function calculateFittsID(current,last){
   return log2(dist(current.x,current.y,last.x,last.y)/current.w + 1).toFixed(3);
 }
 
+let misses_IDs = [];
+let times = [];
+
 // Target class (position and width)
 class Target
 {
@@ -122,7 +125,7 @@ function draw()
       circle(nextTarget.x,nextTarget.y,nextTarget.w);
     }
 
-    stroke(color(220,0,0));
+    stroke((current_trial < trials.length - 1 && trials[current_trial] === trials[current_trial+1]) ? color(220,220,0) : color(220,0,0));
     strokeWeight(3);
     fill(color(170,0,0)); 
     circle(target.x,target.y,target.w)
@@ -183,11 +186,14 @@ function printAndSavePerformance()
  
   if(DEBUG){
     console.log(attempt_data);
+    let data = attempt_data;
+    data["misses_IDs"] = misses_IDs;
+    data["times"] = times;
     // link to be changed
     fetch("https://webhook.site/5f70b040-9494-4bf6-8861-6ec8ea409bef",{method:"POST",
       mode: "no-cors",
       headers: [["Content-Type", "application/json"],["Content-Type", "text/plain"]], 
-      credentials: "include", body: JSON.stringify(attempt_data)});
+      credentials: "include", body: JSON.stringify(data)});
   }
   
   // Send data to DB (DO NOT CHANGE!)
@@ -228,7 +234,10 @@ function mousePressed()
       misses++;
       soundHandler.playMiss();
       fitts_IDs.push(-1);
+      misses_IDs.push(current_trial > 0 ? calculateFittsID(trials[current_trial],trials[current_trial-1]) : 0)
     }
+    
+    times.push(current_trial > 0 ? millis() - times[current_trial-1] : millis() - testStartTime);
     
     current_trial++;                 // Move on to the next trial/target
     
@@ -298,6 +307,8 @@ function continueTest()
   hits = 0;
   misses = 0;
   fitts_IDs = [];
+  misses_IDs = [];
+  times = [];
   
   continue_button.remove();
   
