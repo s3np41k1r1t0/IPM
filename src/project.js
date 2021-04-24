@@ -32,6 +32,7 @@ class soundBox {
   constructor(){
     this.synth = new p5.MonoSynth();
     this.noteHit = "A5";
+    this.hitSound = loadSound("static/hit.mp3")
     this.noteMiss = "B3";
     this.velocity = 0.5;
     this.startTime = 0;
@@ -41,7 +42,8 @@ class soundBox {
   // Plays high pitch sound on target hit
   playHit(){
     userStartAudio();
-    this.synth.play(this.noteHit,this.velocity,this.startTime,this.duration);
+    // this.synth.play(this.noteHit,this.velocity,this.startTime,this.duration);
+    this.hitSound.play();
   }
   
   // Plays low pitch sound on target miss
@@ -112,21 +114,34 @@ function draw()
     for (var i = 0; i < 16; i++) drawTarget(i);
 
     let target = getTargetBounds(trials[current_trial]);
+    
+    if(dist(target.x,target.y,mouseX,mouseY) < target.w)
+      cursor('static/c1.png')
+    
+    else
+      cursor('static/c2.png')
 
     if(current_trial < trials.length - 1){
       let nextTarget = getTargetBounds(trials[current_trial+1]);             
+      
+      //draws line between target and next target
       stroke(color(220,0,0));
       strokeWeight(3);
       fill(color(170,0,0)); 
+
       line(target.x,target.y,nextTarget.x,nextTarget.y);
+
+      // draws next target
       stroke(color(220,220,0));
       strokeWeight(3);
       fill(color(155,155,155));
       circle(nextTarget.x,nextTarget.y,nextTarget.w);
     }
 
+
     stroke((current_trial < trials.length - 1 && trials[current_trial] === trials[current_trial+1]) ? color(220,220,0) : color(220,0,0));
     strokeWeight(3);
+    noStroke();
     fill(color(170,0,0)); 
     circle(target.x,target.y,target.w)
   }
