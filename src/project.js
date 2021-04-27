@@ -205,10 +205,10 @@ function printAndSavePerformance()
     data["misses_IDs"] = misses_IDs;
     data["times"] = times;
     // link to be changed
-    fetch("https://webhook.site/5f70b040-9494-4bf6-8861-6ec8ea409bef",{method:"POST",
+    fetch("/report",{method:"POST",
       mode: "no-cors",
-      headers: [["Content-Type", "application/json"],["Content-Type", "text/plain"]], 
-      credentials: "include", body: JSON.stringify(data)});
+      headers: [["Content-Type", "application/json"]], 
+      body: JSON.stringify(data)});
   }
   
   // Send data to DB (DO NOT CHANGE!)

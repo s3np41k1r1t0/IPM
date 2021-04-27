@@ -6,3 +6,4 @@ server
 minify.sh
 src/static/favicon.ico
 player
+logger.py
