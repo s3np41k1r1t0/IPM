@@ -5,7 +5,7 @@
 
 // Database (CHANGE THESE!)
 const GROUP_NUMBER   = 26;      // Add your group number here as an integer (e.g., 2, 3)
-const BAKE_OFF_DAY   = false;  // Set to 'true' before sharing during the simulation and bake-off days
+const BAKE_OFF_DAY   = true;  // Set to 'true' before sharing during the simulation and bake-off days
 const DEBUG = true; // Remove me on bake-off day
 
 // Target and grid properties (DO NOT CHANGE!)
@@ -199,18 +199,6 @@ function printAndSavePerformance()
         fitts_IDs:          fitts_IDs
   }
  
-  if(DEBUG){
-    console.log(attempt_data);
-    let data = attempt_data;
-    data["misses_IDs"] = misses_IDs;
-    data["times"] = times;
-    // link to be changed
-    fetch("/report",{method:"POST",
-      mode: "no-cors",
-      headers: [["Content-Type", "application/json"]], 
-      body: JSON.stringify(data)});
-  }
-  
   // Send data to DB (DO NOT CHANGE!)
   if (BAKE_OFF_DAY)
   {
@@ -224,6 +212,17 @@ function printAndSavePerformance()
     // Add user performance results
     let db_ref = database.ref('G' + GROUP_NUMBER);
     db_ref.push(attempt_data);
+  }
+
+  if(DEBUG){
+    let data = attempt_data;
+    data["misses_IDs"] = misses_IDs;
+    data["times"] = times;
+    // link to be changed
+    fetch("/report",{method:"POST",
+      mode: "no-cors",
+      headers: [["Content-Type", "application/json"]], 
+      body: JSON.stringify(data)});
   }
 }
 
