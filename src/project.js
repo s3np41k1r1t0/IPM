@@ -5,8 +5,8 @@
 
 // Database (CHANGE THESE!)
 const GROUP_NUMBER   = 26;      // Add your group number here as an integer (e.g., 2, 3)
-const BAKE_OFF_DAY   = true;  // Set to 'true' before sharing during the simulation and bake-off days
-const DEBUG = true; // Remove me on bake-off day
+const BAKE_OFF_DAY   = false;  // Set to 'true' before sharing during the simulation and bake-off days
+const DEBUG = false; // Remove me on bake-off day
 
 // Target and grid properties (DO NOT CHANGE!)
 let PPI, PPCM;
@@ -115,11 +115,7 @@ function draw()
 
     let target = getTargetBounds(trials[current_trial]);
     
-    if(dist(target.x,target.y,mouseX,mouseY) < target.w)
-      cursor('static/c1.png')
-    
-    else
-      cursor('static/c2.png')
+    cursor('static/c2.png',8,8)
 
     if(current_trial < trials.length - 1){
       let nextTarget = getTargetBounds(trials[current_trial+1]);             
@@ -137,13 +133,34 @@ function draw()
       fill(color(155,155,155));
       circle(nextTarget.x,nextTarget.y,nextTarget.w);
     }
+    
+    // draws line between cursor and current target
+    line(mouseX,mouseY,target.x,target.y);
 
+    // draws white circle if mouse in hit range
+    if(dist(target.x,target.y,mouseX,mouseY) < target.w/2) {
+      strokeWeight(3);
+      stroke(color(255,255,255));
+      fill(color(170,0,0)); 
+      cursor('static/c1.png',8,8);
+    }
 
-    stroke((current_trial < trials.length - 1 && trials[current_trial] === trials[current_trial+1]) ? color(220,220,0) : color(220,0,0));
-    strokeWeight(3);
+    // draws yellow stroke if next target is the same as the current target
+    else if(trials[current_trial] === trials[current_trial+1]){
+      strokeWeight(3);
+      stroke(color(220,220,0));
+      fill(color(220,0,0)); 
+    }
+    
+    else {
+      noStroke()
+      fill(color(220,0,0)); 
+    }
+
+    // draws current target
+    circle(target.x,target.y,target.w);
+    
     noStroke();
-    fill(color(170,0,0)); 
-    circle(target.x,target.y,target.w)
   }
 }
 
@@ -218,7 +235,6 @@ function printAndSavePerformance()
     let data = attempt_data;
     data["misses_IDs"] = misses_IDs;
     data["times"] = times;
-    // link to be changed
     fetch("/report",{method:"POST",
       mode: "no-cors",
       headers: [["Content-Type", "application/json"]], 
