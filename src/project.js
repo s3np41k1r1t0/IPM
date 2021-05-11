@@ -1,221 +1,265 @@
-// Bakeoff #2 - Seleção de Alvos e Fatores Humanos
+// Bakeoff #3 - Escrita em Smartwatches
 // IPM 2020-21, Semestre 2
-// Entrega: até dia 7 de Maio às 23h59 através do Fenix
-// Bake-off: durante os laboratórios da semana de 3 de Maio
+// Entrega: até dia 4 de Junho às 23h59 através do Fenix
+// Bake-off: durante os laboratórios da semana de 31 de Maio
+
+// p5.js reference: https://p5js.org/reference/
 
 // Database (CHANGE THESE!)
-const GROUP_NUMBER   = 26;      // Add your group number here as an integer (e.g., 2, 3)
-const BAKE_OFF_DAY   = false;  // Set to 'true' before sharing during the simulation and bake-off days
-const DEBUG = false; // Remove me on bake-off day
+const GROUP_NUMBER   = 0;      // add your group number here as an integer (e.g., 2, 3)
+const BAKE_OFF_DAY   = false;  // set to 'true' before sharing during the simulation and bake-off days
 
-// Target and grid properties (DO NOT CHANGE!)
-let PPI, PPCM;
-let TARGET_SIZE;
-let TARGET_PADDING, MARGIN, LEFT_PADDING, TOP_PADDING;
-let continue_button;
+let PPI, PPCM;                 // pixel density (DO NOT CHANGE!)
+let second_attempt_button;     // button that starts the second attempt (DO NOT CHANGE!)
+
+// Finger parameters (DO NOT CHANGE!)
+let finger_img;                // holds our finger image that simules the 'fat finger' problem
+let FINGER_SIZE, FINGER_OFFSET;// finger size and cursor offsett (calculated after entering fullscreen)
+
+// Arm parameters (DO NOT CHANGE!)
+let arm_img;                   // holds our arm/watch image
+let ARM_LENGTH, ARM_HEIGHT;    // arm size and position (calculated after entering fullscreen)
+
+// Study control parameters (DO NOT CHANGE!)
+let draw_finger_arm  = false;  // used to control what to show in draw()
+let phrases          = [];     // contains all 501 phrases that can be asked of the user
+let current_trial    = 0;      // the current trial out of 2 phrases (indexes into phrases array above)
+let attempt          = 0       // the current attempt out of 2 (to account for practice)
+let target_phrase    = "";     // the current target phrase
+let currently_typed  = "";     // what the user has typed so far
+let entered          = new Array(2); // array to store the result of the two trials (i.e., the two phrases entered in one attempt)
+let CPS              = 0;      // add the characters per second (CPS) here (once for every attempt)
 
 // Metrics
-let testStartTime, testEndTime;// time between the start and end of one attempt (48 trials)
-let hits 			 = 0;      // number of successful selections
-let misses 			 = 0;      // number of missed selections (used to calculate accuracy)
-let database;                  // Firebase DB  
+let attempt_start_time, attempt_end_time; // attemps start and end times (includes both trials)
+let trial_end_time;            // the timestamp of when the lastest trial was completed
+let letters_entered  = 0;      // running number of letters entered (for final WPM computation)
+let letters_expected = 0;      // running number of letters expected (from target phrase)
+let errors           = 0;      // a running total of the number of errors (when hitting 'ACCEPT')
+let database;                  // Firebase DB
 
-// Study control parameters
-let draw_targets     = false;  // used to control what to show in draw()
-let trials 			 = [];     // contains the order of targets that activate in the test
-let current_trial    = 0;      // the current trial number (indexes into trials array above)
-let attempt          = 0;      // users complete each test twice to account for practice (attemps 0 and 1)
-let fitts_IDs        = [];     // add the Fitts ID for each selection here (-1 when there is a miss)
+// 2D Keyboard UI
+let leftArrow, rightArrow;     // holds the left and right UI images for our basic 2D keyboard   
+let ARROW_SIZE;                // UI button size
+let current_letter = 'a';      // current char being displayed on our basic 2D keyboard (starts with 'a')
 
-// Sound handler class for when a hit is registered
-class soundBox {
-  constructor(){
-    this.synth = new p5.MonoSynth();
-    this.noteHit = "A5";
-    this.hitSound = loadSound("static/hit.mp3")
-    this.noteMiss = "B3";
-    this.velocity = 0.5;
-    this.startTime = 0;
-    this.duration = 0.33;
-  }
-
-  // Plays high pitch sound on target hit
-  playHit(){
-    userStartAudio();
-    // this.synth.play(this.noteHit,this.velocity,this.startTime,this.duration);
-    this.hitSound.play();
-  }
+// Runs once before the setup() and loads our data (images, phrases)
+function preload()
+{    
+  // Loads simulation images (arm, finger) -- DO NOT CHANGE!
+  arm = loadImage("data/arm_watch.png");
+  fingerOcclusion = loadImage("data/finger.png");
+    
+  // Loads the target phrases (DO NOT CHANGE!)
+  phrases = loadStrings("data/phrases.txt");
   
-  // Plays low pitch sound on target miss
-  playMiss(){
-    userStartAudio();
-    this.synth.play(this.noteMiss,this.velocity,this.startTime,this.duration);
-  }
-}
-
-let soundHandler;
-
-// logarithm function for base2
-const log2 = (n) => {
-  return Math.log(n) / Math.log(2);
-};
-  
-// calculates fitts id given 2 target indexes
-function calculateFittsID(current,last){
-  current = getTargetBounds(current);
-  last = getTargetBounds(last);
-  return log2(dist(current.x,current.y,last.x,last.y)/current.w + 1).toFixed(3);
-}
-
-let misses_IDs = [];
-let times = [];
-
-// Target class (position and width)
-class Target
-{
-  constructor(x, y, w)
-  {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-  }
+  // Loads UI elements for our basic keyboard
+  leftArrow = loadImage("data/left.png");
+  rightArrow = loadImage("data/right.png");
 }
 
 // Runs once at the start
 function setup()
 {
-  createCanvas(700, 500);    // window size in px before we go into fullScreen()
-  frameRate(60);             // frame rate (DO NOT CHANGE!)
-  resizeCanvas(windowWidth, windowHeight); // prettify
+  createCanvas(700, 500);   // window size in px before we go into fullScreen()
+  frameRate(60);            // frame rate (DO NOT CHANGE!)
   
-  randomizeTrials();         // randomize the trial order at the start of execution
+  // DO NOT CHANGE THESE!
+  shuffle(phrases, true);   // randomize the order of the phrases list (N=501)
+  target_phrase = phrases[current_trial];
   
-  textFont("Arial", 18);     // font size for the majority of the text
-  drawUserIDScreen();        // draws the user input screen (student number and display size)
-  
-  soundHandler = new soundBox(); // sound handler
-  masterVolume(0.1);         // thank you for not blowing up our ears
+  drawUserIDScreen();       // draws the user input screen (student number and display size)
 }
 
-// Runs every frame and redraws the screen
 function draw()
-{
-  if (draw_targets)
+{ 
+  if(draw_finger_arm)
   {
-    // The user is interacting with the 4x4 target grid
-    background(color(0,0,0));        // sets background to black
+    background(255);           // clear background
+    noCursor();                // hides the cursor to simulate the 'fat finger'
     
-    // Print trial count at the top left-corner of the canvas
-    fill(color(255,255,255));
-    textAlign(LEFT);
-    text("Trial " + (current_trial + 1) + " of " + trials.length, 50, 20);
+    drawArmAndWatch();         // draws arm and watch background
+    writeTargetAndEntered();   // writes the target and entered phrases above the watch
+    drawACCEPT();              // draws the 'ACCEPT' button that submits a phrase and completes a trial
     
-    // Draw all 16 targets
-    for (var i = 0; i < 16; i++) drawTarget(i);
-
-    let target = getTargetBounds(trials[current_trial]);
-    
-    cursor('static/c2.png',8,8)
-
-    if(current_trial < trials.length - 1){
-      let nextTarget = getTargetBounds(trials[current_trial+1]);             
-      
-      //draws line between target and next target
-      stroke(color(220,0,0));
-      strokeWeight(3);
-      fill(color(170,0,0)); 
-
-      line(target.x,target.y,nextTarget.x,nextTarget.y);
-
-      // draws next target
-      stroke(color(220,220,0));
-      strokeWeight(3);
-      fill(color(155,155,155));
-      circle(nextTarget.x,nextTarget.y,nextTarget.w);
-    }
-    
-    // draws line between cursor and current target
-    line(mouseX,mouseY,target.x,target.y);
-
-    // draws white circle if mouse in hit range
-    if(dist(target.x,target.y,mouseX,mouseY) < target.w/2) {
-      strokeWeight(3);
-      stroke(color(255,255,255));
-      fill(color(170,0,0)); 
-      cursor('static/c1.png',8,8);
-    }
-
-    // draws yellow stroke if next target is the same as the current target
-    else if(trials[current_trial] === trials[current_trial+1]){
-      strokeWeight(3);
-      stroke(color(220,220,0));
-      fill(color(220,0,0)); 
-    }
-    
-    else {
-      noStroke()
-      fill(color(220,0,0)); 
-    }
-
-    // draws current target
-    circle(target.x,target.y,target.w);
-    
+    // Draws the non-interactive screen area (4x1cm) -- DO NOT CHANGE SIZE!
     noStroke();
+    fill(125);
+    rect(width/2 - 2.0*PPCM, height/2 - 2.0*PPCM, 4.0*PPCM, 1.0*PPCM);
+    textAlign(CENTER); 
+    textFont("Arial", 16);
+    fill(0);
+    text("NOT INTERACTIVE", width/2, height/2 - 1.3 * PPCM);
+
+    // Draws the touch input area (4x3cm) -- DO NOT CHANGE SIZE!
+    stroke(0, 255, 0);
+    noFill();
+    rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM);
+
+    draw2Dkeyboard();       // draws our basic 2D keyboard UI
+
+    drawFatFinger();        // draws the finger that simulates the 'fat finger' problem
   }
 }
 
-// Print and save results at the end of 48 trials
+// Draws 2D keyboard UI (current letter and left and right arrows)
+function draw2Dkeyboard()
+{
+  // Writes the current letter
+  textFont("Arial", 24);
+  fill(0);
+  text("" + current_letter, width/2, height/2); 
+  
+  // Draws and the left and right arrow buttons
+  noFill();
+  imageMode(CORNER);
+  image(leftArrow, width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE);
+  image(rightArrow, width/2, height/2, ARROW_SIZE, ARROW_SIZE);  
+}
+
+// Evoked when the mouse button was pressed
+function mousePressed()
+{
+  // Only look for mouse presses during the actual test
+  if (draw_finger_arm)
+  {                   
+    // Check if mouse click happened within the touch input area
+    if(mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM))  
+    {      
+      // Check if mouse click was on left arrow (2D keyboard)
+      if (mouseClickWithin(width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE))
+      {
+        current_letter = getPreviousChar(current_letter);
+        if (current_letter.charCodeAt(0) < '_'.charCodeAt(0)) current_letter = 'z';  // wrap around to z
+      }
+      // Check if mouse click was on right arrow (2D keyboard)
+      else if (mouseClickWithin(width/2, height/2, ARROW_SIZE, ARROW_SIZE))
+      {
+        current_letter = getNextChar(current_letter);
+        if (current_letter.charCodeAt(0) > 'z'.charCodeAt(0)) current_letter = '_'; // wrap back to space (i.e., the underscore)
+      }
+      else
+      {
+        // Click in whitespace indicates a character input (2D keyboard)
+        if (current_letter == '_') currently_typed += " ";                          // if underscore, consider that a space bar
+        else if (current_letter == '`' && currently_typed.length > 0)               // if `, treat that as delete
+          currently_typed = currently_typed.substring(0, currently_typed.length - 1);
+        else if (current_letter != '`') currently_typed += current_letter;          // if not any of the above cases, add the current letter to the entered phrase
+      }
+    }
+    
+    // Check if mouse click happened within 'ACCEPT' 
+    // (i.e., submits a phrase and completes a trial)
+    else if (mouseClickWithin(width/2 - 2*PPCM, height/2 - 5.1*PPCM, 4.0*PPCM, 2.0*PPCM))
+    {
+      // Saves metrics for the current trial
+      letters_expected += target_phrase.trim().length;
+      letters_entered += currently_typed.trim().length;
+      errors += computeLevenshteinDistance(currently_typed.trim(), target_phrase.trim());
+      entered[current_trial] = currently_typed;
+      trial_end_time = millis();
+
+      current_trial++;
+
+      // Check if the user has one more trial/phrase to go
+      if (current_trial < 2)                                           
+      {
+        // Prepares for new trial
+        currently_typed = "";
+        target_phrase = phrases[current_trial];  
+      }
+      else
+      {
+        // The user has completed both phrases for one attempt
+        draw_finger_arm = false;
+        attempt_end_time = millis();
+        
+        printAndSavePerformance();        // prints the user's results on-screen and sends these to the DB
+        attempt++;
+
+        // Check if the user is about to start their second attempt
+        if (attempt < 2)
+        {
+          second_attempt_button = createButton('START 2ND ATTEMPT');
+          second_attempt_button.mouseReleased(startSecondAttempt);
+          second_attempt_button.position(width/2 - second_attempt_button.size().width/2, height/2 + 200);
+        }
+      }
+    }
+  }
+}
+
+// Resets variables for second attempt
+function startSecondAttempt()
+{
+  // Re-randomize the trial order (DO NOT CHANG THESE!)
+  shuffle(phrases, true);
+  current_trial        = 0;
+  target_phrase        = phrases[current_trial];
+  
+  // Resets performance variables (DO NOT CHANG THESE!)
+  letters_expected     = 0;
+  letters_entered      = 0;
+  errors               = 0;
+  currently_typed      = "";
+  CPS                  = 0;
+  
+  current_letter       = 'a';
+  
+  // Show the watch and keyboard again
+  second_attempt_button.remove();
+  draw_finger_arm      = true;
+  attempt_start_time   = millis();  
+}
+
+// Print and save results at the end of 2 trials
 function printAndSavePerformance()
 {
-  // DO NOT CHANGE THESE! 
-  let accuracy			= parseFloat(hits * 100) / parseFloat(hits + misses);
-  let test_time         = (testEndTime - testStartTime) / 1000;
-  let time_per_target   = nf((test_time) / parseFloat(hits + misses), 0, 3);
-  let penalty           = constrain((((parseFloat(95) - (parseFloat(hits * 100) / parseFloat(hits + misses))) * 0.2)), 0, 100);
-  let target_w_penalty	= nf(((test_time) / parseFloat(hits + misses) + penalty), 0, 3);
-  let timestamp         = day() + "/" + month() + "/" + year() + "  " + hour() + ":" + minute() + ":" + second();
+  // DO NOT CHANGE THESE
+  let attempt_duration = (attempt_end_time - attempt_start_time) / 60000;          // 60K is number of milliseconds in minute
+  let wpm              = (letters_entered / 5.0) / attempt_duration;      
+  let freebie_errors   = letters_expected * 0.05;                                  // no penalty if errors are under 5% of chars
+  let penalty          = max(0, (errors - freebie_errors) / attempt_duration); 
+  let wpm_w_penalty    = max((wpm - penalty),0);                                   // minus because higher WPM is better: NET WPM
+  let timestamp        = day() + "/" + month() + "/" + year() + "  " + hour() + ":" + minute() + ":" + second();
   
-  background(color(0,0,0));   // clears screen
-  fill(color(255,255,255));   // set text fill color to white
-  text(timestamp, 10, 20);    // display time on screen (top-left corner)
+  background(color(0,0,0));    // clears screen
+  cursor();                    // shows the cursor again
   
-  textAlign(CENTER);
-  text("Attempt " + (attempt + 1) + " out of 2 completed!", width/2, 60); 
-  text("Hits: " + hits, width/2, 100);
-  text("Misses: " + misses, width/2, 120);
-  text("Accuracy: " + accuracy + "%", width/2, 140);
-  text("Total time taken: " + test_time + "s", width/2, 160);
-  text("Average time per target: " + time_per_target + "s", width/2, 180);
-  text("Average time for each target (+ penalty): " + target_w_penalty + "s", width/2, 220);
+  textFont("Arial", 16);       // sets the font to Arial size 16
+  fill(color(255,255,255));    //set text fill color to white
+  text(timestamp, 100, 20);    // display time on screen 
   
-  // Print Fitts IDS (one per target, -1 if failed selection)
-  text("Fitts Index of Performance", width/2, 260);
+  text("Finished attempt " + (attempt + 1) + " out of 2!", width / 2, height / 2); 
   
-  // Pretty prints the Fitts IDs taking into consideration their relative position 
-  let idx = 260+40;
-  const mult = 2 * (height - idx) / fitts_IDs.length;
-  fitts_IDs.forEach((id,i) => {
-    text("Target " + (i+1) + ": " + (id !== -1 ? id : "MISSED"), 
-          width/4 * (1 + 2 * Math.floor((idx + i*mult) / height)),
-          idx + (i*mult % (height - idx)));
-  });
+  // For each trial/phrase
+  let h = 20;
+  for(i = 0; i < 2; i++, h += 40 ) 
+  {
+    text("Target phrase " + (i+1) + ": " + phrases[i], width / 2, height / 2 + h);
+    text("User typed " + (i+1) + ": " + entered[i], width / 2, height / 2 + h+20);
+  }
   
+  text("Raw WPM: " + wpm.toFixed(2), width / 2, height / 2 + h+20);
+  text("Freebie errors: " + freebie_errors.toFixed(2), width / 2, height / 2 + h+40);
+  text("Penalty: " + penalty.toFixed(2), width / 2, height / 2 + h+60);
+  text("WPM with penalty: " + wpm_w_penalty.toFixed(2), width / 2, height / 2 + h+80);
+
   // Saves results (DO NOT CHANGE!)
   let attempt_data = 
   {
-        project_from:       GROUP_NUMBER,
-        assessed_by:        student_ID,
-        test_completed_by:  timestamp,
-        attempt:            attempt,
-        hits:               hits,
-        misses:             misses,
-        accuracy:           accuracy,
-        attempt_duration:   test_time,
-        time_per_target:    time_per_target,
-        target_w_penalty:   target_w_penalty,
-        fitts_IDs:          fitts_IDs
+        project_from:         GROUP_NUMBER,
+        assessed_by:          student_ID,
+        attempt_completed_by: timestamp,
+        attempt:              attempt,
+        attempt_duration:     attempt_duration,
+        raw_wpm:              wpm,      
+        freebie_errors:       freebie_errors,
+        penalty:              penalty,
+        wpm_w_penalty:        wpm_w_penalty,
+        cps:                  CPS
   }
- 
+  
   // Send data to DB (DO NOT CHANGE!)
   if (BAKE_OFF_DAY)
   {
@@ -230,144 +274,25 @@ function printAndSavePerformance()
     let db_ref = database.ref('G' + GROUP_NUMBER);
     db_ref.push(attempt_data);
   }
-
-  if(DEBUG){
-    let data = attempt_data;
-    data["misses_IDs"] = misses_IDs;
-    data["times"] = times;
-    fetch("/report",{method:"POST",
-      mode: "no-cors",
-      headers: [["Content-Type", "application/json"]], 
-      body: JSON.stringify(data)});
-  }
-}
-
-// Mouse button was pressed - lets test to see if hit was in the correct target
-function mousePressed() 
-{
-  // Only look for mouse releases during the actual test
-  // (i.e., during target selections)
-  if (draw_targets)
-  {
-    // Get the location and size of the target the user should be trying to select
-    let target = getTargetBounds(trials[current_trial]);   
-    
-    // Check to see if the mouse cursor is inside the target bounds,
-    // increasing either the 'hits' or 'misses' counters
-    if (dist(target.x, target.y, mouseX, mouseY) < target.w/2) {
-      hits++;
-      soundHandler.playHit();
-      // if its the first trial pushes what must be printed afterward
-      fitts_IDs.push(current_trial > 0 ? calculateFittsID(trials[current_trial],trials[current_trial-1]) : "---");
-    }                                                         
-    else {
-      misses++;
-      soundHandler.playMiss();
-      fitts_IDs.push(-1);
-      misses_IDs.push(current_trial > 0 ? calculateFittsID(trials[current_trial],trials[current_trial-1]) : 0)
-    }
-    
-    times.push(current_trial > 0 ? millis() - times[current_trial-1] : millis() - testStartTime);
-    
-    current_trial++;                 // Move on to the next trial/target
-    
-    // Check if the user has completed all 48 trials
-    if (current_trial === trials.length)
-    {
-      testEndTime = millis();
-      draw_targets = false;          // Stop showing targets and the user performance results
-      printAndSavePerformance();     // Print the user's results on-screen and send these to the DB
-      attempt++;                      
-      
-      // If there's an attempt to go create a button to start this
-      if (attempt < 2)
-      {
-        continue_button = createButton('START 2ND ATTEMPT');
-        continue_button.mouseReleased(continueTest);
-        continue_button.position(width/2 - continue_button.size().width/2, height/2 - continue_button.size().height/2);
-      }
-    } 
-  }
-}
-
-// Draw target on-screen
-function drawTarget(i)
-{
-  // Get the location and size for target (i)
-  let target = getTargetBounds(i);             
-
-  // Check whether this target is the target the user should be trying to select
-  // Highlights the target the user should be trying to select
-  // with a white border
-
-  // Remember you are allowed to access targets (i-1) and (i+1)
-  // if this is the target the user should be trying to select
-  //
-  
-  // Does not draw a border if this is not the target the user
-  // should be trying to select
-  // else {
-    noStroke();          
-    fill(color(155,155,155));                 
-  // }
-
-  // Draws the target
-  // fill(color(155,155,155));                 
-  circle(target.x, target.y, target.w);
-}
-
-// Returns the location and size of a given target
-function getTargetBounds(i)
-{
-  var x = parseInt(LEFT_PADDING) + parseInt((i % 4) * (TARGET_SIZE + TARGET_PADDING) + MARGIN);
-  var y = parseInt(TOP_PADDING) + parseInt(Math.floor(i / 4) * (TARGET_SIZE + TARGET_PADDING) + MARGIN);
-
-  return new Target(x, y, TARGET_SIZE);
-}
-
-// Evoked after the user starts its second (and last) attempt
-function continueTest()
-{
-  // Re-randomize the trial order
-  shuffle(trials, true);
-  current_trial = 0;
-  print("trial order: " + trials);
-  
-  // Resets performance variables
-  hits = 0;
-  misses = 0;
-  fitts_IDs = [];
-  misses_IDs = [];
-  times = [];
-  
-  continue_button.remove();
-  
-  // Shows the targets again
-  draw_targets = true;
-  testStartTime = millis();  
 }
 
 // Is invoked when the canvas is resized (e.g., when we go fullscreen)
-function windowResized() 
+function windowResized()
 {
-  // Fix for resize screen bug while not playing, please do not janky solutions :')
-  // Starts drawing targets immediately after we go fullscreen
-  if((draw_targets = document.getElementsByTagName("button").length === 0 && attempt < 2)){
-    resizeCanvas(windowWidth, windowHeight);
-
-    let display    = new Display({ diagonal: display_size }, window.screen);
-
-    // DO NOT CHANGE THESE!
-    PPI            = display.ppi;                        // calculates pixels per inch
-    PPCM           = PPI / 2.54;                         // calculates pixels per cm
-    TARGET_SIZE    = 1.5 * PPCM;                         // sets the target size in cm, i.e, 1.5cm
-    TARGET_PADDING = 1.5 * PPCM;                         // sets the padding around the targets in cm
-    MARGIN         = 1.5 * PPCM;                         // sets the margin around the targets in cm
-
-    // Sets the margin of the grid of targets to the left of the canvas (DO NOT CHANGE!)
-    LEFT_PADDING   = width/2 - TARGET_SIZE - 1.5 * TARGET_PADDING - 1.5 * MARGIN;        
-    
-    // Sets the margin of the grid of targets to the top of the canvas (DO NOT CHANGE!)
-    TOP_PADDING    = height/2 - TARGET_SIZE - 1.5 * TARGET_PADDING - 1.5 * MARGIN;
-  }
+  resizeCanvas(windowWidth, windowHeight);
+  let display    = new Display({ diagonal: display_size }, window.screen);
+  
+  // DO NO CHANGE THESE!
+  PPI           = display.ppi;                        // calculates pixels per inch
+  PPCM          = PPI / 2.54;                         // calculates pixels per cm
+  FINGER_SIZE   = (int)(11   * PPCM);
+  FINGER_OFFSET = (int)(0.8  * PPCM)
+  ARM_LENGTH    = (int)(19   * PPCM);
+  ARM_HEIGHT    = (int)(11.2 * PPCM);
+  
+  ARROW_SIZE    = (int)(2.2 * PPCM);
+  
+  // Starts drawing the watch immediately after we go fullscreen (DO NO CHANGE THIS!)
+  draw_finger_arm = true;
+  attempt_start_time = millis();
 }
