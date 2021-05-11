@@ -1,9 +1,5 @@
-# IPM - Bake Off 2
+# IPM - Bake Off 3
 
-Simple concept: we show you balls, you hit the balls
+Simple concept: we show you letters, you hit the letters
 
-I heard it makes you really good in CS:GO
-
-# TODO
-
-- Make the targets outline more visible? idfk
+I heard it makes you really good in touch typing, ahah
