@@ -43,7 +43,7 @@ let leftArrow, rightArrow;     // holds the left and right UI images for our bas
 let ARROW_SIZE;                // UI button size
 let current_letter = 'a';      // current char being displayed on our basic 2D keyboard (starts with 'a')
 // TODO: change me
-let state = true;
+let state = false;
 let letter_sets = [['a', 'b', 'c', 'd', 'e', 'f', 'g'], ['h', 'i', 'j', 'k', 'l', 'm', 'n'], ['o', 'p', 'q', 'r', 's', 't', 'u'], ['v', 'w', 'x', 'y', 'z', '_', '`']];
 let current_set = ["<"].concat(letter_sets[0]);
 
@@ -157,43 +157,55 @@ function mousePressed()
     // Check if mouse click happened within the touch input area
     if(mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM))  
     {      
-      // Check if mouse click was on left arrow (2D keyboard)
-      // if (mouseClickWithin(width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE))
-      // {
-      //   current_letter = getPreviousChar(current_letter);
-      //   if (current_letter.charCodeAt(0) < '_'.charCodeAt(0)) current_letter = 'z';  // wrap around to z
-      // }
-      // // Check if mouse click was on right arrow (2D keyboard)
-      // else if (mouseClickWithin(width/2, height/2, ARROW_SIZE, ARROW_SIZE))
-      // {
-      //   current_letter = getNextChar(current_letter);
-      //   if (current_letter.charCodeAt(0) > 'z'.charCodeAt(0)) current_letter = '_'; // wrap back to space (i.e., the underscore)
-      // }
-      // else
-      // {
-      //   // Click in whitespace indicates a character input (2D keyboard)
-      //   if (current_letter == '_') currently_typed += " ";                          // if underscore, consider that a space bar
-      //   else if (current_letter == '`' && currently_typed.length > 0)               // if `, treat that as delete
-      //     currently_typed = currently_typed.substring(0, currently_typed.length - 1);
-      //   else if (current_letter != '`') currently_typed += current_letter;          // if not any of the above cases, add the current letter to the entered phrase
-      // }
-      
-      if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
-        current_set = ["<"].concat(letter_sets[0]);
-        state = true;
-      } 
-      else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
-        current_set = ["<"].concat(letter_sets[1]);
-        state = true;
-      } 
-      else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
-        current_set = ["<"].concat(letter_sets[2]);
-        state = true;
-      } 
-      else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
-        current_set = ["<"].concat(letter_sets[3]);
-        state = true;
-      } 
+      // Check for individual keys menu
+      if(state === true) {
+        if(mouseClickWithin(width/2 + -2*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
+          state = false;
+          return;
+        } else if(mouseClickWithin(width/2 + -1*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
+          current_letter = current_set[1];
+        } else if(mouseClickWithin(width/2 + 0*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
+          current_letter = current_set[2];
+        } else if(mouseClickWithin(width/2 + 1*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){ 
+          current_letter = current_set[3];
+        } else if(mouseClickWithin(width/2 + -2*PPCM + 0.1*PPCM, height/2 + 0.5*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
+          current_letter = current_set[4];
+        } else if(mouseClickWithin(width/2 + -1*PPCM + 0.1*PPCM, height/2 + 0.5*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){ 
+          current_letter = current_set[5];
+        } else if(mouseClickWithin(width/2 + 0*PPCM + 0.1*PPCM, height/2 + 0.5*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
+          current_letter = current_set[6];
+        } else if(mouseClickWithin(width/2 + 1*PPCM + 0.1*PPCM, height/2 + 0.5*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
+          current_letter = current_set[7];
+        } else {
+          return;
+        } 
+        
+        if (current_letter == '_') 
+          currently_typed += " ";                          // if underscore, consider that a space bar
+        else if (current_letter == '`' && currently_typed.length > 0)               // if `, treat that as delete
+          currently_typed = currently_typed.substring(0, currently_typed.length - 1);
+        else if (current_letter != '`') 
+          currently_typed += current_letter; 
+      }
+      // Check 4 sets menu
+      else {
+        if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
+          current_set = ["<"].concat(letter_sets[0]);
+          state = true;
+        } 
+        else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
+          current_set = ["<"].concat(letter_sets[1]);
+          state = true;
+        } 
+        else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
+          current_set = ["<"].concat(letter_sets[2]);
+          state = true;
+        } 
+        else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
+          current_set = ["<"].concat(letter_sets[3]);
+          state = true;
+        } 
+      }
     }
     
     // Check if mouse click happened within 'ACCEPT' 
