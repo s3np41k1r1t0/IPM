@@ -6,7 +6,7 @@
 // p5.js reference: https://p5js.org/reference/
 
 // Database (CHANGE THESE!)
-const GROUP_NUMBER   = 0;      // add your group number here as an integer (e.g., 2, 3)
+const GROUP_NUMBER   = 26;      // add your group number here as an integer (e.g., 2, 3)
 const BAKE_OFF_DAY   = false;  // set to 'true' before sharing during the simulation and bake-off days
 
 let PPI, PPCM;                 // pixel density (DO NOT CHANGE!)
@@ -42,6 +42,10 @@ let database;                  // Firebase DB
 let leftArrow, rightArrow;     // holds the left and right UI images for our basic 2D keyboard   
 let ARROW_SIZE;                // UI button size
 let current_letter = 'a';      // current char being displayed on our basic 2D keyboard (starts with 'a')
+// TODO: change me
+let state = true;
+let letter_sets = [['a', 'b', 'c', 'd', 'e', 'f', 'g'], ['h', 'i', 'j', 'k', 'l', 'm', 'n'], ['o', 'p', 'q', 'r', 's', 't', 'u'], ['v', 'w', 'x', 'y', 'z', '_', '`']];
+let current_set = ["<"].concat(letter_sets[0]);
 
 // Runs once before the setup() and loads our data (images, phrases)
 function preload()
@@ -68,7 +72,9 @@ function setup()
   shuffle(phrases, true);   // randomize the order of the phrases list (N=501)
   target_phrase = phrases[current_trial];
   
+  // DO NOT SHIP THIS TO PRODUCTION PLEASE
   drawUserIDScreen();       // draws the user input screen (student number and display size)
+  // windowResized();
 }
 
 function draw()
@@ -105,16 +111,41 @@ function draw()
 // Draws 2D keyboard UI (current letter and left and right arrows)
 function draw2Dkeyboard()
 {
-  // Writes the current letter
-  textFont("Arial", 24);
-  fill(0);
-  text("" + current_letter, width/2, height/2); 
+  if(state === false) {
+    textFont("Arial", Math.round(PPCM/2));
+    fill(0);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    text("A B C\nD E F G", width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text("H I J\nK L M N", width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text("O P Q\nR S T U", width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text("V W X\nY Z _ `", width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    
+    stroke(0, 255, 0);
+    // Draws separators
+    noFill();
+    line(width/2, height/2 - 1.0*PPCM, width/2, height/2 + 2.0*PPCM);
+    line(width/2 - 2.0*PPCM, height/2 + 0.5*PPCM, width/2 + 2.0*PPCM, height/2 + 0.5*PPCM);
+  }
   
-  // Draws and the left and right arrow buttons
-  noFill();
-  imageMode(CORNER);
-  image(leftArrow, width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE);
-  image(rightArrow, width/2, height/2, ARROW_SIZE, ARROW_SIZE);  
+  else {
+    stroke(0, 255, 0);
+    // Draws separators
+    noFill();
+    line(width/2, height/2 - 1.0*PPCM, width/2, height/2 + 2.0*PPCM);
+    line(width/2 - 1.0*PPCM, height/2 - 1.0*PPCM, width/2 - 1.0*PPCM, height/2 + 2.0*PPCM);
+    line(width/2 + 1.0*PPCM, height/2 - 1.0*PPCM, width/2 + 1.0*PPCM, height/2 + 2.0*PPCM);
+    line(width/2 - 2.0*PPCM, height/2 + 0.5*PPCM, width/2 + 2.0*PPCM, height/2 + 0.5*PPCM);
+
+    textFont("Arial", Math.round(PPCM/2));
+    fill(0);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    
+    current_set.forEach((c,i) => {
+      text(c.toUpperCase(), width/2 + ((i%4)-2)*PPCM + 0.1*PPCM , height/2 + ((Math.floor(i/4)*1.5)-1)*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM);
+    });  
+  }
 }
 
 // Evoked when the mouse button was pressed
@@ -127,25 +158,42 @@ function mousePressed()
     if(mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM))  
     {      
       // Check if mouse click was on left arrow (2D keyboard)
-      if (mouseClickWithin(width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE))
-      {
-        current_letter = getPreviousChar(current_letter);
-        if (current_letter.charCodeAt(0) < '_'.charCodeAt(0)) current_letter = 'z';  // wrap around to z
-      }
-      // Check if mouse click was on right arrow (2D keyboard)
-      else if (mouseClickWithin(width/2, height/2, ARROW_SIZE, ARROW_SIZE))
-      {
-        current_letter = getNextChar(current_letter);
-        if (current_letter.charCodeAt(0) > 'z'.charCodeAt(0)) current_letter = '_'; // wrap back to space (i.e., the underscore)
-      }
-      else
-      {
-        // Click in whitespace indicates a character input (2D keyboard)
-        if (current_letter == '_') currently_typed += " ";                          // if underscore, consider that a space bar
-        else if (current_letter == '`' && currently_typed.length > 0)               // if `, treat that as delete
-          currently_typed = currently_typed.substring(0, currently_typed.length - 1);
-        else if (current_letter != '`') currently_typed += current_letter;          // if not any of the above cases, add the current letter to the entered phrase
-      }
+      // if (mouseClickWithin(width/2 - ARROW_SIZE, height/2, ARROW_SIZE, ARROW_SIZE))
+      // {
+      //   current_letter = getPreviousChar(current_letter);
+      //   if (current_letter.charCodeAt(0) < '_'.charCodeAt(0)) current_letter = 'z';  // wrap around to z
+      // }
+      // // Check if mouse click was on right arrow (2D keyboard)
+      // else if (mouseClickWithin(width/2, height/2, ARROW_SIZE, ARROW_SIZE))
+      // {
+      //   current_letter = getNextChar(current_letter);
+      //   if (current_letter.charCodeAt(0) > 'z'.charCodeAt(0)) current_letter = '_'; // wrap back to space (i.e., the underscore)
+      // }
+      // else
+      // {
+      //   // Click in whitespace indicates a character input (2D keyboard)
+      //   if (current_letter == '_') currently_typed += " ";                          // if underscore, consider that a space bar
+      //   else if (current_letter == '`' && currently_typed.length > 0)               // if `, treat that as delete
+      //     currently_typed = currently_typed.substring(0, currently_typed.length - 1);
+      //   else if (current_letter != '`') currently_typed += current_letter;          // if not any of the above cases, add the current letter to the entered phrase
+      // }
+      
+      if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
+        current_set = ["<"].concat(letter_sets[0]);
+        state = true;
+      } 
+      else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
+        current_set = ["<"].concat(letter_sets[1]);
+        state = true;
+      } 
+      else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
+        current_set = ["<"].concat(letter_sets[2]);
+        state = true;
+      } 
+      else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
+        current_set = ["<"].concat(letter_sets[3]);
+        state = true;
+      } 
     }
     
     // Check if mouse click happened within 'ACCEPT' 
@@ -279,20 +327,23 @@ function printAndSavePerformance()
 // Is invoked when the canvas is resized (e.g., when we go fullscreen)
 function windowResized()
 {
-  resizeCanvas(windowWidth, windowHeight);
-  let display    = new Display({ diagonal: display_size }, window.screen);
-  
-  // DO NO CHANGE THESE!
-  PPI           = display.ppi;                        // calculates pixels per inch
-  PPCM          = PPI / 2.54;                         // calculates pixels per cm
-  FINGER_SIZE   = (int)(11   * PPCM);
-  FINGER_OFFSET = (int)(0.8  * PPCM)
-  ARM_LENGTH    = (int)(19   * PPCM);
-  ARM_HEIGHT    = (int)(11.2 * PPCM);
-  
-  ARROW_SIZE    = (int)(2.2 * PPCM);
-  
-  // Starts drawing the watch immediately after we go fullscreen (DO NO CHANGE THIS!)
   draw_finger_arm = true;
-  attempt_start_time = millis();
+  if(document.getElementsByTagName("button").length === 0 && attempt < 2){
+    resizeCanvas(windowWidth, windowHeight);
+    let display    = new Display({ diagonal: display_size }, window.screen);
+     
+    // DO NO CHANGE THESE!
+    PPI           = display.ppi;                        // calculates pixels per inch
+    PPCM          = PPI / 2.54;                         // calculates pixels per cm
+    FINGER_SIZE   = (int)(11   * PPCM);
+    FINGER_OFFSET = (int)(0.8  * PPCM)
+    ARM_LENGTH    = (int)(19   * PPCM);
+    ARM_HEIGHT    = (int)(11.2 * PPCM);
+    
+    ARROW_SIZE    = (int)(2.2 * PPCM);
+    
+    // Starts drawing the watch immediately after we go fullscreen (DO NO CHANGE THIS!)
+    draw_finger_arm = true;
+    attempt_start_time = millis();
+  }
 }
