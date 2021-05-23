@@ -43,9 +43,11 @@ let leftArrow, rightArrow;     // holds the left and right UI images for our bas
 let ARROW_SIZE;                // UI button size
 let current_letter = 'a';      // current char being displayed on our basic 2D keyboard (starts with 'a')
 // TODO: change me
-let state = false;
+let state = 0;
 let letter_sets = [['a', 'b', 'c', 'd', 'e', 'f', 'g'], ['h', 'i', 'j', 'k', 'l', 'm', 'n'], ['o', 'p', 'q', 'r', 's', 't', 'u'], ['v', 'w', 'x', 'y', 'z', '_', '`']];
 let current_set = ["<"].concat(letter_sets[0]);
+const predict_words = ['the', 'a', 'is', 'to', 'of', 'you', 'are', 'in', 'for', 'i', 'very', 'your', 'my', 'this', 'do', 'and', 'be', 'good', 'not', 'with', 'on', 'will', 'that', 'we', 'was', 'an', 'too', 'all', 'it', 'must', 'he', 'out', 'our', 'get', 'at', 'one', 'can', 'never', 'what', 'has', 'like', 'have', 'work', 'water', 'make', 'lot', 'up', 'come', 'about', 'by', 'way', 'play', 'just', 'if', 'go', 'time', 'keep', 'bad', 'dog', 'expensive', 'house', 'more', 'big', 'there', 'than', 'coffee', 'much', 'high', 'did', 'no', 'question', 'many', 'please', 'see', 'from', 'lie', 'their', 'should', 'important', 'every', 'late', 'where', 'so', 'always', 'home', 'want', 'nation', 'through', 'her', 'better', 'take', 'me', 'today', 'some', 'first', 'favorite', 'hard', 'month', 'fine', 'does', 'silly', 'traveling', 'bone', 'takes', 'complicated', 'words', 'sharp', 'wrong', 'effort', 'rain', 'faster', 'leave', 'makes', 'drugs', 'thing', 'most', 'these', 'midnight', 'before', 'nothing', 'they', 'watched', 'win', 'day', 'us', 'walk', 'parking', 'food', 'little', 'library', 'help', 'idea', 'deserve', 'questions', 'only', 'jacket', 'am', 'new', 'movie', 'took', 'but', 'music', 'smart', 'cannot', 'love', 'force', 'off', 'two', 'three', 'best', 'difficult', 'watch', 'locked', 'doors', 'court', 'nose', 'find', 'learn', 'when', 'ever', 'found', 'bus', 'try', 'entire', 'enjoy', 'look', 'hardest', 'cars', 'or', 'small', 'enough', 'need', 'fire', 'accident', 'gun', 'news', 'books', 'would', 'know', 'broken', 'doctor', 'tomorrow', 'strike', 'deserves', 'fuel', 'times', 'seven', 'six', 'meeting', 'exercise', 'mind', 'crime', 'fit', 'needs', 'spill', 'people', 'connected', 'response', 'put', 'man', 'tickets', 'busy', 'right', 'looks', 'beautiful', 'system', 'loose', 'warm', 'staying', 'boring', 'think', 'as', 'were', 'drive', 'stuck', 'glasses', 'sprawling', 'someone', 'five', 'carpet', 'red', 'feel', 'cookies', 'his', 'listen', 'meet', 'window', 'immediately', 'cards', 'care', 'wants', 'away', 'join', 'rises', 'four', 'ask', 'registered', 'life', 'monthly', 'sent', 'gas', 'light', 'speed', 'communicate', 'job', 'experience', 'organization', 'had', 'environment', 'gets', 'without', 'exchange', 'fax', 'reading', 'yard', 'monkey', 'camera', 'weekend', 'country', 'largest', 'round', 'asked', 'cream', 'head', 'ten', 'information', 'made', 'chocolate', 'still', 'tonight', 'fox', 'quick', 'tie', 'wearing', 'over', 'team', 'coming', 'car', 'professor', 'shop', 'dry', 'levee', 'jumping', 'drink', 'facts', 'hair', 'say', 'agree', 'double', 'world', 'getting', 'things', 'means', 'else', 'everyone', 'risk', 'run', 'objects', 'subject', 'zero', 'visit', 'place', 'shopping', 'bring', 'bank', 'east', 'wind', 'chills', 'gives', 'line', 'picket', 'lottery', 'recruitment', 'employee', 'mine', 'abandoned', 'garbage', 'battles', 'custody', 'looses', 'everybody', 'stimulus', 'unicycle', 'riding', 'curve', 'learning', 'steep', 'referendum', 'swim', 'tried', 'discouraging', 'letters', 'rejection', 'courts', 'wisdom', 'questioning', 'bakeoffs', 'sick', 'seminars', 'motivational', 'night', 'dormitory', 'seems', 'idiot', 'honest', 'judges', 'tests', 'detector', 'liar', 'suggests', 'enlarged', 'grow', 'tell', 'offensive', 'comment', 'might', 'verbs', 'irregular', 'shirts', 'eventually', 'gamblers', 'seen', 'hamburger', 'biggest', 'whole', 'ate', 'believe', 'near', 'willows', 'weeping', 'poisonous', 'snake', 'rattle', 'evil', 'harrison', 'ordered', 'handled', 'powder', 'spot', 'nearby', 'apartments', 'challenged', 'slippery', 'roads', 'helps', 'pumping', 'speak', 'nervous', 'fun', 'conferences', 'drivers', 'insurance', 'runs', 'oil', 'cut', 'nasty', 'why', 'dipped', 'stock', 'presidents', 'class', 'dhcs', 'persistent', 'down', 'goes', 'usually', 'train', 'taking', 'futile', 'boss', 'arguing', 'style', 'thinking', 'wishful', 'bullet', 'speeding', 'forward', 'step', 'each', 'excellent', 'falling', 'raindrops', 'appears', 'door', 'elevator', 'provinces', 'canada', 'restaurant', 'seat', 'prefer', 'front', 'sit', 'trains', 'education', 'those', 'jobs', 'raise', 'allotted', 'hour', 'wallet', 'luckily', 'evening', 'streets', 'safe', 'thigh', 'knee', 'ahead', 'while', 'quit', 'cancer', 'higher', 'sentence', 'prison', 'long', 'murder', 'beginning', 'paid', 'rent', 'bath', 'benign', 'provided', 'ok', 'tumor', 'fans', 'shrine', 'scene', 'chancellor', 'location', 'sold', 'completely', 'balance', 'treasurer', 'swamp', 'waves', 'top', 'increased', 'expectancy', 'treasure', 'discovering', 'finer', 'working', 'insulation', 'note', 'require', 'prescription', 'sides', 'rectangular', 'course', 'syllabus', 'exciting', 'coronation', 'committed', 'injustice', 'crowded', 'heat', 'inefficient', 'ages', 'extinct', 'been', 'dinosaurs', 'ventilation', 'maternity', 'leap', 'dolphins', 'shivering', 'everywhere', 'suburbs', 'lavatory', 'discreet', 'unavailable', 'proprietor', 'classical', 'baroque', 'published', 'correction', 'horn', 'blow', 'organize', 'how', 'unions', 'labour', 'witnesses', 'precautions', 'raged', 'validated', 'sticker', 'parties', 'political', 'really', 'moderation', 'sample', 'free', 'coupon', 'microscopes', 'results', 'driving', 'careless', 'laundry', 'folds', 'saturday', 'justice', 'offenders', 'rocks', 'granite', 'heroic', 'child', 'saving', 'quota', 'salesmen', 'tabletop', 'scratch', 'astonishment', 'daily', 'monitored', 'leaving', 'ship', 'aboard', 'weekends', 'dine', 'sunset', 'avoided', 'socket', 'plug', 'cells', 'electric', 'merger', 'announce', 'companies', 'says', 'cups', 'spoonful', 'give', 'concentrate', 'short', 'running', 'rapidly', 'hole', 'peering', 'ropes', 'surgery', 'bypass', 'triple', 'underwent', 'blues', 'gospel', 'sing', 'peeps', 'fold', 'below', 'barracks', 'consideration', 'persons', 'handicapped', 'visited', 'majesty', 'thorough', 'housekeeper', 'temperament', 'pleasant', 'cat', 'decision', 'behind', 'rationale', 'confidential', 'diplomacy', 'blazed', 'card', 'business', 'burglars', 'government', 'owned', 'land', 'inspiring', 'presentation', 'algorithm', 'nations', 'poorest', 'discharged', 'hear', 'sad', 'conscience', 'according', 'vote', 'problems', 'rife', 'agreement', 'kissing', 'efforts', 'redouble', 'exasperation', 'complete', 'feeling', 'odd', 'called', 'construction', 'extra', 'february', 'friend', 'rules', 'players', 'machine', 'appointment', 'psychiatrist', 'sunny', 'such', 'women', 'men', 'between', 'interactions', 'politics', 'religion', 'mix', 'union', 'laugh', 'joke', 'field', 'football', 'longer', 'requires', 'order', 'priorities', 'months', 'assault', 'expenses', 'receipts', 'explosion', 'spectacular', 'empire', 'roman', 'collapse', 'mortgage', 'pay', 'him', 'turfed', 'voters', 'losers', 'winners', 'thousand', 'eight', 'security', 'medieval', 'aspirations', 'dress', 'traditional', 'amount', 'minimum', 'strained', 'relations', 'slip', 'withdrawal', 'sign', 'disgusting', 'thoroughly', 'sons', 'daughters', 'subtraction', 'addition', 'enter', 'reluctant', 'result', 'historic', 'objective', 'sympathy', 'period', 'registration', 'keeps', 'cheese', 'punishment', 'suite', 'presidential', 'anniversary', 'silver', 'panel', 'electrical', 'stability', 'investigate', 'etiquette', 'transaction', 'observation', 'interesting', 'advance', 'exam', 'prepare', 'forever', 'chemical', 'wider', 'gap', 'generation', 'bathroom', 'well', 'broke', 'department', 'treasury', 'minute', 'last', 'touchdown', 'fast', 'delivery', 'express', 'equation', 'young', 'daring', 'buried', 'shack', 'photographs', 'nice', 'worth', 'picture', 'writing', 'complaints', 'file', 'year', 'end', 'until', 'valid', 'met', 'obligations', 'occur', 'phenomenon', 'decisions', 'chamber', 'indication', 'any', 'lagoon', 'lost', 'mystery', 'airport', 'guidelines', 'follow', 'figure', 'direction', 'glance', 'machinery', 'cake', 'eat', 'aware', 'acutely', 'tennis', 'forest', 'destruction', 'governments', 'coalition', 'birthday', 'missed', 'meter', 'almost', 'gallery', 'paintings', 'taxation', 'edition', 'fourth', 'sure', 'tree', 'apple', 'voice', 'baloney', 'statement', 'mission', 'turn', 'consequences', 'leather', 'contrast', 'limit', 'maximum', 'exceed', 'sword', 'mightier', 'pen', 'penalty', 'stiff', 'needed', 'encouragement', 'summit', 'reach', 'speech', 'acceptance', 'traffic', 'blocked', 'protesters', 'redress', 'victims', 'taste', 'occasional', 'opera', 'hours', 'understood', 'universally', 'imagination', 'disaster', 'person', 'camping', 'quite', 'stupid', 'beer', 'pizza', 'driveways', 'park', 'parkways', 'race', 'winner', 'price', 'universities', 'cold', 'fingers', 'phrases', 'few', 'transit', 'public', 'got', 'claus', 'santa', 'winter', 'breaks', 'chlorine', 'cottage', 'subdivisions', 'stop', 'flashing', 'knocking', 'deed', 'mother', 'use', 'athletes', 'olympic', 'shall', 'oceans', 'spilled', 'sunday', 'lovely', 'ridiculous', 'bite', 'presence', 'amazing', 'patio', 'sheds', 'left', 'she', 'after', 'cooled', 'game', 'golfers', 'seasoned', 'diction', 'correct', 'loudly', 'shouting', 'everyday', 'tape', 'mask', 'wore', 'superman', 'playing', 'children', 'hand', 'hold', 'noon', 'around', 'ball', 'toss', 'bloodshed', 'war', 'sweatshirt', 'proposal', 'skimmed', 'pimp', 'played', 'peek', 'yap', 'parts', 'sum', 'saddles', 'blazing', 'rid', 'anymore', 'cares', 'nobody', 'bases', 'cover', 'ego', 'wrote', 'freud', 'contest', 'prize', 'lydia', 'pies', 'baking', 'hate', 'cape', 'wears', 'batman', 'face', 'bare', 'now', 'sucker', 'alligator', 'later', 'adult', 'accompanied', 'strangers', 'stay', 'lunch', 'snow', 'dashing', 'worry', 'windy', 'sun', 'seasons', 'years', 'warranty', 'limited', 'quacks', 'duck', 'quickly', 'tire', 'flat', 'bike', 'trucks', 'full', 'excited', 'kids', 'animal', 'season', 'fall', 'mail', 'depot', 'recycling', 'dream', 'predictable', 'quakes', 'earth', 'bills', 'fully', 'travel', 'capital', 'email', 'slow', 'service', 'postal', 'hands', 'healthy', 'interface', 'friendly', 'user', 'profit', 'non', 'checks', 'personal', 'accept', 'services', 'teaching', 'lamb', 'mary', 'closed', 'growing', 'population', 'protect', 'handle', 'safety', 'buckle', 'worm', 'bird', 'early', 'bill', 'thank', 'changed', 'number', 'here', 'week', 'back', 'unfortunate', 'sees', 'lens', 'zoom', 'video', 'party', 'details', 'call', 'second', 'fudge', 'boys', 'jammed', 'printer', 'laser', 'browser', 'web', 'highway', 'super', 'scheduling', 'robin', 'frequently', 'ice', 'flavored', 'vanilla', 'toes', 'knees', 'shoulders', 'close', 'store', 'century', 'quarter', 'due', 'assignment', 'grocery', 'went', 'bears', 'goldilocks', 'turtleneck', 'mom', 'obey', 'subjects', 'tower', 'sends', 'king', 'treat', 'preferred', 'risen', 'index', 'jones', 'dow', 'peanuts', 'bees', 'allergic', 'fog', 'jewels', 'crown', 'wear', 'pile', 'together', 'jumped', 'brown', 'city', 'return', 'soon', 'opposing', 'lesson', 'going', 'bites', 'sound', 'killer', 'nutty', 'rover', 'chevy', 'drove', 'cotton', 'fish', 'easy', 'living', 'dewdrop', 'starlight', 'sounds', 'desired', 'popularity', 'break', 'squander', 'example', 'wonderful', 'priority', 'space', 'dreams', 'dreamers', 'size', 'economy', 'valium', 'greasy', 'gel', 'yes', 'talking', 'refuse', 'offer', 'yet', 'jedi', 'sam', 'again', 'anything', 'denial', 'power', 'trouble', 'toil', 'march', 'ides', 'beware', 'answered', 'heck', 'lender', 'nor', 'borrower', 'neither', 'sister', 'skate', 'stage', 'old', 'disturbance', 'great', 'offends', 'schools', 'prayer', 'failure', 'birth', 'date', 'provide', 'succeed', 'flying', 'low', 'unacceptable', 'circumstances', 'psychology', 'blast', 'mice', 'afraid', 'elephants', 'engine', 'problem', 'spaghetti', 'having', 'elections', 'overdrawn', 'account', 'chemistry', 'physics', 'saturn', 'rings', 'breathing', 'thin', 'rich', 'prevailing', 'fell']
+let nipple_size;
 
 // Runs once before the setup() and loads our data (images, phrases)
 function preload()
@@ -93,13 +95,14 @@ function draw()
     fill(125);
     rect(width/2 - 2.0*PPCM, height/2 - 2.0*PPCM, 4.0*PPCM, 1.0*PPCM);
     textAlign(CENTER); 
-    textFont("Arial", 16);
+    textFont("Arial", 20);
     fill(0);
-    text("NOT INTERACTIVE", width/2, height/2 - 1.3 * PPCM);
+
 
     // Draws the touch input area (4x3cm) -- DO NOT CHANGE SIZE!
     stroke(0, 255, 0);
     noFill();
+    line(width/2, height/2 - 2.0*PPCM, width/2, height/2 - 1.0*PPCM);
     rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM);
 
     draw2Dkeyboard();       // draws our basic 2D keyboard UI
@@ -111,15 +114,36 @@ function draw()
 // Draws 2D keyboard UI (current letter and left and right arrows)
 function draw2Dkeyboard()
 {
-  if(state === false) {
+  if(state === 0) {
     textFont("Arial", Math.round(PPCM/2));
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
-    text("A B C\nD E F G", width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
-    text("H I J\nK L M N", width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
-    text("O P Q\nR S T U", width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
-    text("V W X\nY Z _ `", width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text("A B C D\nE F G   ", width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text("H I J K\n   L M N", width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text("O P Q   \nR S T U", width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text("   V W X\nY Z _ `", width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    
+    stroke(0, 255, 0);
+    // Draws separators
+    noFill();
+    line(width/2, height/2 - 1.0*PPCM, width/2, height/2 + 2.0*PPCM);
+    line(width/2 - 2.0*PPCM, height/2 + 0.5*PPCM, width/2 + 2.0*PPCM, height/2 + 0.5*PPCM);
+    
+    fill(0,255,0);
+    circle(width/2,height/2 + 0.5*PPCM,nipple_size);
+  }
+  
+  else if (state === 2) {
+    textFont("Arial", Math.round(PPCM/2));
+    fill(0);
+    noStroke();
+    textAlign(CENTER, CENTER);
+    let current_words = predict_words.filter((v) => v.startsWith(currently_typed)).slice(0,4);
+    text(current_words[0], width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text(current_words[1], width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text(current_words[2], width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text(current_words[3], width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
     
     stroke(0, 255, 0);
     // Draws separators
@@ -146,6 +170,8 @@ function draw2Dkeyboard()
       text(c.toUpperCase(), width/2 + ((i%4)-2)*PPCM + 0.1*PPCM , height/2 + ((Math.floor(i/4)*1.5)-1)*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM);
     });  
   }
+  
+  noStroke();
 }
 
 // Evoked when the mouse button was pressed
@@ -158,9 +184,9 @@ function mousePressed()
     if(mouseClickWithin(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM))  
     {      
       // Check for individual keys menu
-      if(state === true) {
+      if(state === 1) {
         if(mouseClickWithin(width/2 + -2*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
-          state = false;
+          state = 0;
           return;
         } else if(mouseClickWithin(width/2 + -1*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
           current_letter = current_set[1];
@@ -180,6 +206,9 @@ function mousePressed()
           return;
         } 
         
+        // TODO remove me ???
+        state = 0;
+        
         if (current_letter == '_') 
           currently_typed += " ";                          // if underscore, consider that a space bar
         else if (current_letter == '`' && currently_typed.length > 0)               // if `, treat that as delete
@@ -187,24 +216,44 @@ function mousePressed()
         else if (current_letter != '`') 
           currently_typed += current_letter; 
       }
-      // Check 4 sets menu
-      else {
-        if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
+      // TODO should nipple select word automatically?
+      else if(state === 2) {
+        if(dist(width/2,height/2 + 0.5*PPCM,mouseX,mouseY) < nipple_size) {
+          state = 2;
+          return;
+        }
+        else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
           current_set = ["<"].concat(letter_sets[0]);
-          state = true;
         } 
         else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
           current_set = ["<"].concat(letter_sets[1]);
-          state = true;
         } 
         else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
           current_set = ["<"].concat(letter_sets[2]);
-          state = true;
         } 
         else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
           current_set = ["<"].concat(letter_sets[3]);
-          state = true;
         } 
+        state = 0;
+      }
+      // Check 4 sets menu
+      else {
+        if(dist(width/2,height/2 + 0.5*PPCM,mouseX,mouseY) < nipple_size) {
+          state = 2;
+          return;
+        } else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
+          current_set = ["<"].concat(letter_sets[0]);
+        } 
+        else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
+          current_set = ["<"].concat(letter_sets[1]);
+        } 
+        else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
+          current_set = ["<"].concat(letter_sets[2]);
+        } 
+        else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
+          current_set = ["<"].concat(letter_sets[3]);
+        } 
+        state = 1;
       }
     }
     
@@ -357,5 +406,6 @@ function windowResized()
     // Starts drawing the watch immediately after we go fullscreen (DO NO CHANGE THIS!)
     draw_finger_arm = true;
     attempt_start_time = millis();
+    nipple_size = 1.0*PPCM;
   }
 }
