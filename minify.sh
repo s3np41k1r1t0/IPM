@@ -1,10 +1,12 @@
 #!/bin/sh
 
 mkdir server 
+mkdir server/static
+mkdir server/data
 
 cp src/static/* server/static
 cp src/data/* server/data
 
 cp src/style.css server/style.css
 cp src/index.html server/index.html
-google-closure-compiler --js src/project.js --js_output_file server/project.js
+cp src/project.js server/project.js
