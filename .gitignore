@@ -3,7 +3,6 @@ bin
 .idea
 .project
 server
-minify.sh
 src/static/favicon.ico
 cheats
 logger.py
