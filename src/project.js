@@ -47,7 +47,7 @@ let state = 0;
 let letter_sets = [['a', 'b', 'c', 'd', 'e', 'f', 'g'], ['h', 'i', 'j', 'k', 'l', 'm', 'n'], ['o', 'p', 'q', 'r', 's', 't', 'u'], ['v', 'w', 'x', 'y', 'z', '_', '`']];
 let current_set = ["<"].concat(letter_sets[0]);
 let nipple_size;
-let predict = "";
+let predict = ['the','of','and','to']
 let current_word = "";
 
 // Runs once before the setup() and loads our data (images, phrases)
@@ -96,15 +96,19 @@ function draw()
     fill(125);
     rect(width/2 - 2.0*PPCM, height/2 - 2.0*PPCM, 4.0*PPCM, 1.0*PPCM);
     textAlign(CENTER); 
-    textFont("Arial", 20);
-    text(predict);
+    textFont("Arial", 15);
     fill(0);
+    text(predict[2], width/2 - 1*PPCM, height/2 - 1.21 * PPCM);
+    text(predict[0], width/2 - 1*PPCM, height/2 - 1.7 * PPCM);
+    text(predict[3], width/2 + 1*PPCM, height/2 - 1.21 * PPCM);
+    text(predict[1], width/2 + 1*PPCM, height/2 - 1.7 * PPCM);
 
 
     // Draws the touch input area (4x3cm) -- DO NOT CHANGE SIZE!
     stroke(0, 255, 0);
     noFill();
     line(width/2, height/2 - 2.0*PPCM, width/2, height/2 - 1.0*PPCM);
+    line(width/2 - 2*PPCM, height/2 - 1.5*PPCM, width/2 + 2*PPCM, height/2 - 1.5*PPCM);
     rect(width/2 - 2.0*PPCM, height/2 - 1.0*PPCM, 4.0*PPCM, 3.0*PPCM);
 
     draw2Dkeyboard();       // draws our basic 2D keyboard UI
@@ -141,17 +145,19 @@ function draw2Dkeyboard()
     fill(0);
     noStroke();
     textAlign(CENTER, CENTER);
-    //let current_words = predict_words.filter((v) => v.startsWith(currently_typed)).slice(0,4);
-    //text(current_words[0], width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
-    //text(current_words[1], width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
-    //text(current_words[2], width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
-    //text(current_words[3], width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text(predict[0], width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text(predict[1], width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text(predict[2], width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text(predict[3], width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
     
     stroke(0, 255, 0);
     // Draws separators
     noFill();
     line(width/2, height/2 - 1.0*PPCM, width/2, height/2 + 2.0*PPCM);
     line(width/2 - 2.0*PPCM, height/2 + 0.5*PPCM, width/2 + 2.0*PPCM, height/2 + 0.5*PPCM);
+    
+    fill(0,255,0);
+    circle(width/2,height/2 + 0.5*PPCM,nipple_size);
   }
   
   else {
@@ -177,10 +183,10 @@ function draw2Dkeyboard()
 }
 
 async function fetch_predict() {
-  fetch(`/predict?current=${current_word}`).then((r) => {
-    console.log(r.json());
-  });
-  return "randomword";
+  if(current_word == "") return ['the','of','and','to']
+  let r = await fetch(`/predict?current=${current_word}`);
+  let j = await r.json();
+  return j;
 }
 
 // Evoked when the mouse button was pressed
@@ -216,10 +222,11 @@ async function mousePressed()
         } 
         
         // TODO remove me ???
-        //state = 0;
+        state = 0;
         
         if (current_letter == '_') {
           currently_typed += " ";   
+          current_word = "";
         }
 
         // if space is removed it doesnt fall back to the previous word        
@@ -236,32 +243,35 @@ async function mousePressed()
         
         predict = await fetch_predict();
       }
-      // TODO should nipple select word automatically?
+
       else if(state === 2) {
         if(dist(width/2,height/2 + 0.5*PPCM,mouseX,mouseY) < nipple_size) {
-          state = 2;
+          state = 0;
           return;
         }
         else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
-          current_set = ["<"].concat(letter_sets[0]);
+          currently_typed = currently_typed.substring(0,currently_typed.length - current_word.length) + `${predict[0]} `;
+          current_word = "";
         } 
         else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
-          current_set = ["<"].concat(letter_sets[1]);
+          currently_typed = currently_typed.substring(0,currently_typed.length - current_word.length) + `${predict[1]} `;
+          current_word = "";
         } 
         else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
-          current_set = ["<"].concat(letter_sets[2]);
+          currently_typed = currently_typed.substring(0,currently_typed.length - current_word.length) + `${predict[2]} `;
+          current_word = "";
         } 
         else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
-          current_set = ["<"].concat(letter_sets[3]);
+          currently_typed = currently_typed.substring(0,currently_typed.length - current_word.length) + `${predict[3]} `;
+          current_word = "";
         } 
         state = 0;
       }
+
       // Check 4 sets menu
       else {
         if(dist(width/2,height/2 + 0.5*PPCM,mouseX,mouseY) < nipple_size) {
-          //state = 2;
-          currently_typed += predict.substring(current_word.length) + " ";
-          current_word = "";
+          state = 2;
           return;
         } else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
           current_set = ["<"].concat(letter_sets[0]);
