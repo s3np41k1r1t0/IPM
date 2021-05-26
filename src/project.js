@@ -7,7 +7,7 @@
 
 // Database (CHANGE THESE!)
 const GROUP_NUMBER   = 26;      // add your group number here as an integer (e.g., 2, 3)
-const BAKE_OFF_DAY   = false;  // set to 'true' before sharing during the simulation and bake-off days
+const BAKE_OFF_DAY   = true;  // set to 'true' before sharing during the simulation and bake-off days
 
 let PPI, PPCM;                 // pixel density (DO NOT CHANGE!)
 let second_attempt_button;     // button that starts the second attempt (DO NOT CHANGE!)
@@ -49,6 +49,7 @@ let current_set = ["<"].concat(letter_sets[0]);
 let nipple_size;
 let predict = ['the','of','and','to']
 let current_word = "";
+let past_word = "";
 
 // Runs once before the setup() and loads our data (images, phrases)
 function preload()
@@ -183,8 +184,7 @@ function draw2Dkeyboard()
 }
 
 async function fetch_predict() {
-  if(current_word == "") return ['the','of','and','to']
-  let r = await fetch(`/predict?current=${current_word}`);
+  let r = await fetch(`/predict?current=${current_word}&past=${past_word}`);
   let j = await r.json();
   return j;
 }
@@ -226,6 +226,7 @@ async function mousePressed()
         
         if (current_letter == '_') {
           currently_typed += " ";   
+          past_word = current_word;
           current_word = "";
         }
 
@@ -251,21 +252,26 @@ async function mousePressed()
         }
         else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
           currently_typed = currently_typed.substring(0,currently_typed.length - current_word.length) + `${predict[0]} `;
+          past_word = predict[0]
           current_word = "";
         } 
         else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
           currently_typed = currently_typed.substring(0,currently_typed.length - current_word.length) + `${predict[1]} `;
+          past_word = predict[1]
           current_word = "";
         } 
         else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
           currently_typed = currently_typed.substring(0,currently_typed.length - current_word.length) + `${predict[2]} `;
+          past_word = predict[2]
           current_word = "";
         } 
         else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
           currently_typed = currently_typed.substring(0,currently_typed.length - current_word.length) + `${predict[3]} `;
+          past_word = predict[3]
           current_word = "";
         } 
         state = 0;
+        predict = await fetch_predict();
       }
 
       // Check 4 sets menu
@@ -293,6 +299,8 @@ async function mousePressed()
     // (i.e., submits a phrase and completes a trial)
     else if (mouseClickWithin(width/2 - 2*PPCM, height/2 - 5.1*PPCM, 4.0*PPCM, 2.0*PPCM))
     {
+      current_word = ""
+      predict = ['the','of','and','to']
       // Saves metrics for the current trial
       letters_expected += target_phrase.trim().length;
       letters_entered += currently_typed.trim().length;

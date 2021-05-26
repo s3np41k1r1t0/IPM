@@ -1,8 +1,11 @@
 #!/bin/sh
 
-mkdir server 
-mkdir server/static
-mkdir server/data
+if [ ! -d server ]
+then
+    mkdir server
+    mkdir server/static
+    mkdir server/data
+fi
 
 cp src/static/* server/static
 cp src/data/* server/data

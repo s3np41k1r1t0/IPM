@@ -20,34 +20,42 @@ for w in data:
 
 for c in string.printable:
     # good enough i guess
-    words[c] = words[c][:100]
+    words[c] = words[c]
 
-with open("data/spell-errors.txt") as f:
-    data = f.read().strip().split("\n")
+with open("data/bigrams.mod") as f:
+    data = list(map(lambda x: x.split("\t")[0].split(" "), f.read().strip().split("\n")))
 
-autocorrect = {}
+bi = {}
 
-for line in data:
-	v = line.split(": ")[0].split(",")
-	for k in line.split(": ")[1].split(", "):
-		autocorrect[k] = v[0]
+for k,v in data:
+    if k not in bi.keys():
+        bi[k] = list()
+    bi[k].append(v)
 
 @app.route("/predict")
 def index():
-	current = request.args.get("current")
+    current = request.args.get("current")
+    past = request.args.get("past")
+    print(current,len(current),past,len(past))
 
-	if current == "":
-		return json.dumps(default)
+    try:
+        if len(current) > 0:
+            res = list(filter(lambda x: x.startswith(current),bi[past]))[:4]
+        else:
+            res = bi[past][:4]
 
-	try:
-		res = []
-		res.append(autocorrect[current])
-		res += list(map(lambda x: x[0], process.extract(current, words[current[0]], limit=3, scorer=fuzz.token_sort_ratio)))
-		return json.dumps(res)
+    except:
+        res = []
 
-	except:
-		res = list(map(lambda x: x[0], process.extract(current, words[current[0]], limit=4, scorer=fuzz.token_sort_ratio)))
-		return json.dumps(res)
+    if len(current) > 0:
+        res += list(filter(lambda x: x.startswith(current), words[current[0]]))[:4]
 
-if __name__ == "__main__":
-    app.run("0.0.0.0", 80)
+    else:
+        res += bi["<S>"][:4]
+
+    res = list(set(res))
+
+    for i in range(len(res),4):
+        res.append("")
+
+    return json.dumps(res[:4])
