@@ -44,7 +44,7 @@ let ARROW_SIZE;                // UI button size
 let current_letter = 'a';      // current char being displayed on our basic 2D keyboard (starts with 'a')
 // TODO: change me
 let state = 0;
-let letter_sets = [['a', 'b', 'c', 'd', 'e', 'f', 'g'], ['h', 'i', 'j', 'k', 'l', 'm', 'n'], ['o', 'p', 'q', 'r', 's', 't', 'u'], ['v', 'w', 'x', 'y', 'z', '_', '`']];
+let letter_sets = [['a', 'b', 'c', 'd', 'e', 'f', 'g'], ['h', 'i', 'j', 'k', 'l', 'm', 'n'], ['o', 'p', 'q', 'r', 's', 't', 'u'], ['v', 'w', 'x', 'y', 'z', '_', '␡']];
 let current_set = ["<"].concat(letter_sets[0]);
 let nipple_size;
 let predict = ['the','of','and','to']
@@ -129,7 +129,7 @@ function draw2Dkeyboard()
     text("A B C D\nE F G   ", width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
     text("H I J K\n   L M N", width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM); 
     text("O P Q   \nR S T U", width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
-    text("   V W X\nY Z _ `", width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
+    text("   V W X\nY Z _ ␡", width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM); 
     
     stroke(0, 255, 0);
     // Draws separators
@@ -231,13 +231,13 @@ async function mousePressed()
         }
 
         // if space is removed it doesnt fall back to the previous word        
-        else if (current_letter == '`' && currently_typed.length > 0) {               // if `, treat that as delete
+        else if (current_letter == '␡' && currently_typed.length > 0) {               // if `, treat that as delete
           currently_typed = currently_typed.substring(0, currently_typed.length - 1);
           if(current_word.length > 0) 
             current_word = current_word.substring(0, current_word.length - 1);
         }
 
-        else if (current_letter != '`') {
+        else if (current_letter != '␡') {
           currently_typed += current_letter; 
           current_word += current_letter;
         }
@@ -371,6 +371,7 @@ function printAndSavePerformance()
   let penalty          = max(0, (errors - freebie_errors) / attempt_duration); 
   let wpm_w_penalty    = max((wpm - penalty),0);                                   // minus because higher WPM is better: NET WPM
   let timestamp        = day() + "/" + month() + "/" + year() + "  " + hour() + ":" + minute() + ":" + second();
+  CPS = letters_entered / (attempt_duration * 60);
   
   background(color(0,0,0));    // clears screen
   cursor();                    // shows the cursor again
@@ -389,6 +390,7 @@ function printAndSavePerformance()
     text("User typed " + (i+1) + ": " + entered[i], width / 2, height / 2 + h+20);
   }
   
+  text("CPS: " + CPS.toFixed(2), width / 2, height / 2 + h);
   text("Raw WPM: " + wpm.toFixed(2), width / 2, height / 2 + h+20);
   text("Freebie errors: " + freebie_errors.toFixed(2), width / 2, height / 2 + h+40);
   text("Penalty: " + penalty.toFixed(2), width / 2, height / 2 + h+60);
