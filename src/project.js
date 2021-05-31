@@ -44,8 +44,8 @@ let ARROW_SIZE;                // UI button size
 let current_letter = 'a';      // current char being displayed on our basic 2D keyboard (starts with 'a')
 // TODO: change me
 let state = 0;
-let letter_sets = [['a', 'b', 'c', 'd', 'e', 'f', 'g'], ['h', 'i', 'j', 'k', 'l', 'm', 'n'], ['o', 'p', 'q', 'r', 's', 't', 'u'], ['v', 'w', 'x', 'y', 'z', '_', '␡']];
-let current_set = ["<"].concat(letter_sets[0]);
+let letter_sets = [['a', 'b', 'c', 'd', 'e', 'f', 'g', '<'], ['h', 'i', 'j', 'k', '<', 'l', 'm', 'n'], ['o', 'p', 'q', '<', 'r', 's', 't', 'u'], ['<', 'v', 'w', 'x', 'y', 'z', '_', '␡']];
+let current_set = letter_sets[0];
 let nipple_size;
 let predict = ['the','of','and','to']
 let current_word = "";
@@ -201,8 +201,7 @@ async function mousePressed()
       // Check for individual keys menu
       if(state === 1) {
         if(mouseClickWithin(width/2 + -2*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
-          state = 0;
-          return;
+          current_letter = current_set[0];
         } else if(mouseClickWithin(width/2 + -1*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
           current_letter = current_set[1];
         } else if(mouseClickWithin(width/2 + 0*PPCM + 0.1*PPCM, height/2 + -1.0*PPCM + 0.1*PPCM, 0.9*PPCM, 1.4*PPCM)){
@@ -220,6 +219,11 @@ async function mousePressed()
         } else {
           return;
         } 
+        
+        if(current_letter === "<") {
+          state = 0;
+          return;
+        }
         
         // TODO remove me ???
         state = 0;
@@ -280,16 +284,16 @@ async function mousePressed()
           state = 2;
           return;
         } else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
-          current_set = ["<"].concat(letter_sets[0]);
+          current_set = letter_sets[0];
         } 
         else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 - 0.9*PPCM, 1.9*PPCM, 1.4*PPCM)){
-          current_set = ["<"].concat(letter_sets[1]);
+          current_set = letter_sets[1];
         } 
         else if(mouseClickWithin(width/2 - 1.9*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
-          current_set = ["<"].concat(letter_sets[2]);
+          current_set = letter_sets[2];
         } 
         else if(mouseClickWithin(width/2 + 0.1*PPCM, height/2 + 0.6*PPCM, 1.9*PPCM, 1.4*PPCM)){
-          current_set = ["<"].concat(letter_sets[3]);
+          current_set = letter_sets[3];
         } 
         state = 1;
       }
