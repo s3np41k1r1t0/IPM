@@ -18,10 +18,6 @@ for c in string.printable:
 for w in data:
     words[w[0]].append(w.split("\t")[0])
 
-for c in string.printable:
-    # good enough i guess
-    words[c] = words[c]
-
 with open("data/bigrams.mod") as f:
     data = list(map(lambda x: x.split("\t")[0].split(" "), f.read().strip().split("\n")))
 
@@ -36,7 +32,6 @@ for k,v in data:
 def index():
     current = request.args.get("current")
     past = request.args.get("past")
-    print(current,len(current),past,len(past))
 
     try:
         if len(current) > 0:

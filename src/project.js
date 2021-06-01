@@ -184,7 +184,7 @@ function draw2Dkeyboard()
 }
 
 async function fetch_predict() {
-  let r = await fetch(`/predict?current=${current_word}&past=${past_word}`);
+  let r = await fetch(`/predict?current=${current_word.trim()}&past=${past_word.trim()}`);
   let j = await r.json();
   return j;
 }
@@ -225,7 +225,6 @@ async function mousePressed()
           return;
         }
         
-        // TODO remove me ???
         state = 0;
         
         if (current_letter == '_') {
@@ -234,8 +233,8 @@ async function mousePressed()
           current_word = "";
         }
 
-        // if space is removed it doesnt fall back to the previous word        
-        else if (current_letter == '␡' && currently_typed.length > 0) {               // if `, treat that as delete
+        else if (current_letter == '␡' && currently_typed.length > 0) {               
+          // if `, treat that as delete
           currently_typed = currently_typed.substring(0, currently_typed.length - 1);
           if(current_word.length > 0) 
             current_word = current_word.substring(0, current_word.length - 1);
